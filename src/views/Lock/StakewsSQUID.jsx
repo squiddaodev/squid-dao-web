@@ -8,7 +8,14 @@ import { error } from "../../slices/MessagesSlice";
 import { ethers } from "ethers";
 import styled from "styled-components";
 import format from "date-fns/format";
-import { changeApproval, claim, createLock, increaseAmount, increaseUnlockTime } from "../../slices/VotingEscrowSlice";
+import {
+  changeApproval,
+  claim,
+  createLock,
+  increaseAmount,
+  increaseUnlockTime,
+  withdraw,
+} from "../../slices/VotingEscrowSlice";
 import { isPendingTxn, txnButtonText } from "../../slices/PendingTxnsSlice";
 import { commify } from "../../helpers";
 import { add } from "date-fns";
@@ -110,6 +117,10 @@ function Lock() {
 
   const onClaim = async () => {
     await dispatch(claim({ address, networkID: chainID, provider }));
+  };
+
+  const onWithdraw = async () => {
+    await dispatch(withdraw({ address, networkID: chainID, provider }));
   };
 
   const hasAllowance = stakeAllowance > 0;
@@ -352,12 +363,26 @@ function Lock() {
                     </div>
                   )}
                   {!isLoading && hasLocked && (
-                    <div>
-                      Unlock available on{" "}
-                      <span style={{ color: "#7F7FD5" }}>
-                        {format(new Date(Number(unlockTime) * 1000), "MMM dd, yyyy")}
-                      </span>
-                    </div>
+                    <>
+                      <div>
+                        Unlock available on{" "}
+                        <span style={{ color: "#7F7FD5" }}>
+                          {format(new Date(Number(unlockTime) * 1000), "MMM dd, yyyy")}
+                        </span>
+                      </div>
+                      <div className="justify-content-center mt-2">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          disabled={
+                            isPendingTxn(pendingTransactions, "approve_staking") || isLocking || lockedBalance <= 0
+                          }
+                          onClick={onWithdraw}
+                        >
+                          {txnButtonText(pendingTransactions, "approve_staking", "Withdraw")}
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </div>
               </Grid>
